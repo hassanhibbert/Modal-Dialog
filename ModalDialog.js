@@ -1,11 +1,14 @@
 (function(global) {
   'use strict';
+
   var
     // Document reference
     document = global.document,
 
     // utilities
-    utils = utilityFunctions();
+    utils = utilityFunctions(),
+
+    transitionEnd = utils.animationEnd();
 
   // ModalDialog constructor
   function ModalDialog(customOptions) {
@@ -18,7 +21,7 @@
 
     // Default options
     var defaults = {
-      animation: 'fade-and-drop',
+      animation: 'fade-in',
       closeButton: true,
       content: '',
       maxWidth: 600,
@@ -31,20 +34,37 @@
   }
 
   ModalDialog.prototype = {
+
     open: function open() {
+
       buildModal.call(this);
       initializeEvents.call(this);
-      global.getComputedStyle(this.currentModal, null).height; // Trigger css reflow
+
+      utils.reflow(this.currentModal); // trigger reflow
+
       this.overlay.className += ' modal-dialog-open';
       this.currentModal.className = this.currentModal.className +
-        (this.currentModal.offsetHeight > window.innerHeight ?
-          " modal-dialog-open modal-dialog-anchored" : " modal-dialog-open");
+        (this.currentModal.offsetHeight > window.innerHeight
+          ? " modal-dialog-open modal-dialog-anchored"
+          : " modal-dialog-open");
     },
+
     close: function close(event) {
       event.preventDefault();
-      utils.isFunction(this.onModalClose) && this.onModalClose();
-      utils.removeNode(this.currentModal);
-      utils.removeNode(this.overlay);
+      var _this = this;
+
+      utils.removeClass(this.overlay, 'modal-dialog-open');
+      utils.removeClass(this.currentModal, 'modal-dialog-open');
+
+      this.currentModal.addEventListener(transitionEnd, function() {
+        utils.removeNode(_this.currentModal);
+        if (utils.isFunction(_this.options.onModalClose)) _this.options.onModalClose();
+      }, false);
+
+      this.overlay.addEventListener(transitionEnd, function() {
+        if(_this.overlay.parentNode) utils.removeNode(_this.overlay);
+      }, false);
+
     }
   };
 
@@ -52,8 +72,8 @@
 
     // Create a DocumentFragment to build with
     var docFrag = document.createDocumentFragment(),
-      content = this.options.content,
-      contentDiv;
+        content = this.options.content,
+        contentDiv;
 
     // Create modal element
     this.currentModal = document.createElement('div');
@@ -72,7 +92,7 @@
     // Create overlay
     if (this.options.overlay) {
       this.overlay = document.createElement('div');
-      this.overlay.className = 'modal-dialog-overlay';
+      this.overlay.className = 'modal-dialog-overlay ' + this.options.animation;
       docFrag.appendChild(this.overlay);
     }
 
@@ -88,44 +108,33 @@
   }
 
   function initializeEvents() {
-    if (this.closeButton) {
-      this.closeButton.addEventListener('click', this.close.bind(this), false);
-    }
-
-    if (this.overlay) {
-      this.overlay.addEventListener('click', this.close.bind(this), false);
-    }
+    if (this.closeButton) this.closeButton.addEventListener('click', this.close.bind(this), false);
+    if (this.overlay) this.overlay.addEventListener('click', this.close.bind(this), false);
   }
 
   function utilityFunctions() {
     var utils = {},
-      ObjProto = Object.prototype,
-      toString = ObjProto.toString;
+        ObjProto = Object.prototype,
+        toString = ObjProto.toString;
 
     // Dynamically creates an HTML element
-    utils.createNode = function(nodeConfig) {
-      var elementType = nodeConfig.type,
-        attributes = nodeConfig.attr,
-        innerContent = nodeConfig.content,
-        element = document.createElement(elementType);
+    utils.animationEnd = () => {
+      var t, el, transitions;
+      el = document.createElement('div');
+      transitions = {
+        'transition': 'transitionend',
+        'OTransition': 'oTransitionEnd',
+        'MozTransition': 'transitionend',
+        'WebkitTransition': 'webkitTransitionEnd'
+      };
 
-      if (attributes) {
-        var attributeKeys = Object.keys(attributes);
-        attributeKeys.forEach((attributeName) => {
-          element.setAttribute(attributeName, attributes[attributeName]);
-      });
-      }
-
-      if (innerContent) {
-        innerContent.forEach((content) => {
-          if (typeof contentItem === 'string') {
-          element.appendChild(document.createTextNode(content));
-        } else {
-          element.appendChild(content);
+      for (t in transitions) {
+        if (transitions.hasOwnProperty(t)) {
+          if (el.style[t] !== undefined) {
+            return transitions[t];
+          }
         }
-      });
       }
-      return element;
     };
 
     // Extends an object with new property values
@@ -139,14 +148,18 @@
       return source;
     };
 
-    // Inserts node after and element
-    utils.insertAfter = (newNode, element) => {
-      element.parentNode.insertBefore(newNode, element.nextSibling);
+    utils.addClass = (element, className) => {
+      if (element.className.indexOf(className) === -1) {
+        if (element.className != '') className = ' ' + className;
+        element.className += className;
+      }
     };
 
-    // Inserts content into an elements innerHTML
-    utils.html = (element, content) => {
-      element.innerHTML = content;
+    utils.removeClass = (element, className) => {
+      if (element.className.indexOf(className) != -1) {
+        var rxp = new RegExp('(\\s|^)' + className + '(\\s|$)');
+        element.className = element.className.replace(rxp,' ').trim();
+      }
     };
 
     // Removes element from DOM
@@ -154,8 +167,9 @@
       element.parentNode.removeChild(element);
     };
 
+    utils.reflow = (element) => element.offsetHeight;
+
     // Type checks
-    utils.isBoolean = (obj) => toString.call(obj) === '[object Boolean]';
     utils.isObject = (obj) => toString.call(obj) === '[object Object]';
     utils.isFunction = (obj) => toString.call(obj) === '[object Function]';
     utils.isString = (obj) => toString.call(obj) === '[object String]';
@@ -168,14 +182,5 @@
 
 })(window);
 
-var modal_1 = ModalDialog({
-  content: 'Hello World'
-});
 
-var modal_2 = ModalDialog({
-  content: 'Hello Universe'
-});
-
-console.log(modal_1);
-console.log(modal_2);
 

@@ -6,10 +6,33 @@
     <link rel="stylesheet" href="ModalDialog.css">
 </head>
 <body>
+<button id="button1">open model 1</button>
+<button id="button2">open model 2</button>
 
 <script src="ModalDialog.js"></script>
-<button onclick="modal_1.open()">open model 1</button>
-<button onclick="modal_2.open()">open model 2</button>
+<script>
+    // :::::::::::::: First Button :::::::::::::: //
+    var button1 = document.getElementById('button1');
+    var firstModal = ModalDialog({
+        content: 'Hello World!',
+        onModalClose: function() {
+            console.log('First modal closed');
+        }
+    });
+    button1.addEventListener('click', function() {
+        firstModal.open();
+    }, false);
 
+
+    // :::::::::::::: Second Button ::::::::::::: //
+    var button2 = document.getElementById('button2');
+    var secondModal = ModalDialog({
+        animation: 'fade-and-drop',
+        content: 'Hello Universe!'
+    });
+    button2.addEventListener('click', function() {
+        secondModal.open();
+    }, false);
+</script>
 </body>
 </html>
