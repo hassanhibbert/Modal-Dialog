@@ -117,7 +117,6 @@
         ObjProto = Object.prototype,
         toString = ObjProto.toString;
 
-    // Dynamically creates an HTML element
     utils.animationEnd = () => {
       var t, el, transitions;
       el = document.createElement('div');
