@@ -1,14 +1,9 @@
 (function(global) {
   'use strict';
 
-  var
-    // Document reference
-    document = global.document,
-
-    // utilities
-    utils = utilityFunctions(),
-
-    transitionEnd = utils.animationEnd();
+  var document = global.document,
+      utils = utilityFunctions(),
+      transitionEnd = utils.animationEnd();
 
   // ModalDialog constructor
   function ModalDialog(customOptions) {
@@ -83,7 +78,7 @@
 
     // Create close button
     if (this.options.closeButton) {
-      this.closeButton = document.createElement('button');
+      this.closeButton = document.createElement('div');
       this.closeButton.className = 'modal-dialog-close';
       this.closeButton.innerHTML = '&times;';
       this.currentModal.appendChild(this.closeButton);
