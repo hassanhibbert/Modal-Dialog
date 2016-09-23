@@ -22,7 +22,8 @@
       maxWidth: 600,
       minWidth: 280,
       overlay: true,
-      onModalClose: null
+      onModalClose: null,
+      backgroundColor: '#ffffff'
     };
 
     if (utils.isObject(customOptions)) this.options = utils.extend(defaults, customOptions);
@@ -31,7 +32,6 @@
   ModalDialog.prototype = {
 
     open: function open() {
-
       buildModal.call(this);
       initializeEvents.call(this);
 
@@ -75,6 +75,7 @@
     this.currentModal.className = 'modal-dialog ' + this.options.animation;
     this.currentModal.style.minWidth = this.options.minWidth + 'px';
     this.currentModal.style.maxWidth = this.options.maxWidth + 'px';
+    this.currentModal.style.backgroundColor = this.options.backgroundColor;
 
     // Create close button
     if (this.options.closeButton) {
